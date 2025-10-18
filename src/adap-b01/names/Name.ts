@@ -40,6 +40,7 @@ export class Name {
      * The control characters in the data string are the default characters
      */
     public asDataString(): string {
+        
         return this.components
                 .map(c => c
                     .replaceAll(ESCAPE_CHARACTER, ESCAPE_CHARACTER + ESCAPE_CHARACTER)
@@ -54,7 +55,7 @@ export class Name {
 
     /** Expects that new Name component c is properly masked */
     public setComponent(i: number, c: string): void {
-        this.components[i]=c;
+        this.components[i]=c; 
     }
 
      /** Returns number of components in Name instance */
