@@ -23,6 +23,7 @@ export class Name {
         this.delimiter = delimiter ?? DEFAULT_DELIMITER;
         this.components = [...other];
         
+        
     }
 
     /**
