@@ -4,17 +4,19 @@ import { Name } from "./Name";
 export abstract class AbstractName implements Name {
 
     protected delimiter: string = DEFAULT_DELIMITER;
+    protected components: string[] = [];
 
     constructor(delimiter: string = DEFAULT_DELIMITER) {
-        throw new Error("needs implementation or deletion");
+        this.delimiter = delimiter;
     }
 
-    public clone(): Name {
-        throw new Error("needs implementation or deletion");
-    }
 
     public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
+        const components: string[] = [];
+        for (let i = 0; i < this.getNoComponents(); i++) {
+            components.push(this.getComponent(i));
+        }
+        return components.join(delimiter);
     }
 
     public toString(): string {
@@ -22,36 +24,134 @@ export abstract class AbstractName implements Name {
     }
 
     public asDataString(): string {
-        throw new Error("needs implementation or deletion");
+        const masked = [];
+        for (let i = 0; i < this.getNoComponents(); i++) {
+            masked.push(this.mask(this.getComponent(i)));
+        }
+        return masked.join(this.delimiter);
     }
 
     public isEqual(other: Name): boolean {
-        throw new Error("needs implementation or deletion");
+        if(this.getDelimiterCharacter()!==other.getDelimiterCharacter()) return false;
+        if(this.getNoComponents()!==other.getNoComponents()) return false;
+        for(let i=0; i<this.getNoComponents(); i++) {
+            if(this.getComponent(i)!==other.getComponent(i)) return false;
+        }
+        return true;
     }
 
     public getHashCode(): number {
-        throw new Error("needs implementation or deletion");
+        let str=this.asDataString();
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash=(hash*31 + str.charCodeAt(i))|0;
+        }
+        return hash;
     }
 
     public isEmpty(): boolean {
-        throw new Error("needs implementation or deletion");
+        return this.getNoComponents() === 0;
     }
 
     public getDelimiterCharacter(): string {
-        throw new Error("needs implementation or deletion");
+        return this.delimiter;
     }
 
-    abstract getNoComponents(): number;
+    public getNoComponents(): number {
+        return this.components.length;
+    }
 
-    abstract getComponent(i: number): string;
-    abstract setComponent(i: number, c: string): void;
+    public getComponent(i: number): string {
+        return this.components[i];
+    }
 
-    abstract insert(i: number, c: string): void;
-    abstract append(c: string): void;
-    abstract remove(i: number): void;
+    public setComponent(i: number, c: string) {
+        this.components[i]=c;
+    }
+
+    public insert(i: number, c: string) {
+        this.components.splice(i,0,c);
+    }
+
+    public append(c: string) {
+        this.components.push(c);
+    }
+
+    public remove(i: number) {
+        this.components.splice(i,1);
+    }
+
+
+
+    /// Abstract methods
+    ///    
+    abstract clone(): Name;
+
+
+    /// Helper methods
+    /// 
 
     public concat(other: Name): void {
-        throw new Error("needs implementation or deletion");
+        for (let i = 0; i < other.getNoComponents(); i++) {
+            this.append(other.getComponent(i));
+        }
+    }
+
+    protected mask(value: string): string {
+        let out = "";
+
+        for (const ch of value) {
+            if (ch === ESCAPE_CHARACTER) {
+                out += ESCAPE_CHARACTER + ESCAPE_CHARACTER;
+            } else if (ch === this.delimiter) {
+                out += ESCAPE_CHARACTER + this.delimiter;
+            } else {
+                out += ch;
+            }
+        }
+
+        return out;
+    }
+
+    protected unmask(value: string): string {
+        let out = "";
+        let escaping = false;
+
+        for (const ch of value) {
+            if (escaping) {
+                out += ch;
+                escaping = false;
+            } else if (ch === ESCAPE_CHARACTER) {
+                escaping = true;
+            } else {
+                out += ch;
+            }
+        }
+
+        return out;
+    }
+
+    protected splitEscaped(str: string): string[] {
+        const parts: string[] = [];
+        let current = "";
+        let escaping = false;
+
+        for (const ch of str) {
+            if (escaping) {
+                current += ch;
+                escaping = false;
+            } else if (ch === ESCAPE_CHARACTER) {
+                escaping = true;
+            } else if (ch === this.delimiter) {
+                parts.push(this.unmask(current));
+                current = "";
+            } else {
+                current += ch;
+            }
+        }
+
+        parts.push(this.unmask(current));
+        return parts;
     }
 
 }
